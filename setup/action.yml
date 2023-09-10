@@ -1,0 +1,14 @@
+name: Setup baedeker
+description: Install baedeker and library
+inputs:
+  version:
+    description: Baedeker version
+    required: false
+    default: v0.1.0-rc1
+  useCache:
+    description: Use cache for downloaded baedeker/library
+    required: false
+    default: true
+runs:
+  using: node16
+  main: ../dist/setup/index.js

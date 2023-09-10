@@ -1,0 +1,23 @@
+{
+  "name": "@baedeker/action",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/artifact": "^1.1.1",
+    "@actions/core": "^1.10.0",
+    "@actions/tool-cache": "^2.0.1",
+    "@types/node": "^20.5.3",
+    "eslint": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@actions/exec": "^1.1.1",
+    "@typescript-eslint/eslint-plugin": ">=6.0.0",
+    "@typescript-eslint/parser": ">=6.0.0",
+    "@vercel/ncc": "^0.36.1",
+    "eslint-config-xo": "^0.43.1",
+    "eslint-config-xo-typescript": "^1.0.1",
+    "typescript": ">=4.7"
+  },
+  "type": "module"
+}
