@@ -22,4 +22,4 @@ outputs:
     description: Path to the created docker-compose project.
 runs:
   using: node16
-  main: dist/reconcile/index.js
+  main: ../dist/reconcile/index.js
