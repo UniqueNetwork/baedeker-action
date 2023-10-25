@@ -15,4 +15,5 @@ update_built: build
 	cd built && git remote add built $REMOTE
 	cd built && git add . && git commit -m "chore: rebuilt"
 	cd built && git push -u built --force HEAD:built
-	
+update_tag TAG: update_built
+	cd built && git tag {{TAG}} && git push --tags
