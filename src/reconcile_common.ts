@@ -6,6 +6,7 @@ import { join } from 'path';
 
 type ReconcilerData = {
    composeProject?: string,
+   configPath?: string,
    inputs?: string[],
    tlaStr?: string[],
    tlaCode?: string[],
@@ -34,7 +35,7 @@ export default async (recon?: ReconcilerData) => {
          ]);
          const projects = JSON.parse(output.stdout);
          for (const project of projects) {
-            if (project.ConfigFiles == recon!.composeProject && project.Status.startsWith('running(')) return;
+            if ((project.ConfigFiles === recon!.composeProject || project.ConfigFiles === recon!.configPath) && project.Status.startsWith('running(')) return;
          }
          throw new Error('compose project is not running, refusing to start/reconcile');
       });
@@ -49,6 +50,7 @@ export default async (recon?: ReconcilerData) => {
    const secretsDir = join(composeProject, 'secrets');
    await mkdir(secretsDir);
    const configPath = join(composeProject, 'docker-compose.yml');
+   recon.configPath = configPath;
    core.saveState(`configPath`, configPath);
 
    const [reconInputs, inputs] = handleEphemeral(recon.inputs ?? [], core.getMultilineInput('inputs'), false);

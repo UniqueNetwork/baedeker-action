@@ -1,9 +1,9 @@
 build:
 	rm -rf dist
-	yarn ncc build src/index.ts -m
-	yarn ncc build src/post.ts -o dist/post -m
-	yarn ncc build src/setup.ts -o dist/setup -m
-	yarn ncc build src/reconcile.ts -o dist/reconcile -m
+	yarn ncc build src/index.ts -m -s
+	yarn ncc build src/post.ts -o dist/post -m -s
+	yarn ncc build src/setup.ts -o dist/setup -m -s
+	yarn ncc build src/reconcile.ts -o dist/reconcile -m -s
 update_built: build
 	rm -rf built || true
 	mkdir built && cd built && git init && git checkout -b built
