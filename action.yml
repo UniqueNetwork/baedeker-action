@@ -1,0 +1,23 @@
+name: Baedeker
+description: Configure baedeker environment
+inputs:
+  inputs:
+    description: Network configuration files
+    required: true
+  tla-str:
+    description: Values to be passed as --tla-str args.
+  tla-code:
+    description: Values to be passed as --tla-code args.
+  jpath:
+    description: Values to be passed as --jpath args.
+outputs:
+  baedeker:
+    description: Launched chain metadata.
+  balancer:
+    description: Nginx container ip (If exists).
+  composeProject:
+    description: Path to the created docker-compose project.
+runs:
+  using: node16
+  main: dist/index.js
+  post: dist/post/index.js
