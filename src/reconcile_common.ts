@@ -66,7 +66,7 @@ export default async (recon?: ReconcilerData) => {
    const [reconJpath, jpath] = handleEphemeral(recon.jpath ?? [], core.getMultilineInput('jpath'), false, s => `-J${s}`);
    recon.jpath = reconJpath;
 
-   const [reconInputModules, inputModules] = handleEphemeral(recon.inputModules ?? [], core.getMultilineInput('input-modules'), true, s => `--input-modules=${s}`);
+   const [reconInputModules, inputModules] = handleEphemeral(recon.inputModules ?? [], core.getMultilineInput('input-modules'), false, s => `--input-modules=${s}`);
   recon.inputModules = reconInputModules;
 
    await core.group('Generating docker-compose', () => exec.exec('baedeker', [
