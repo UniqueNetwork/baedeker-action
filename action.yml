@@ -10,6 +10,9 @@ inputs:
     description: Values to be passed as --tla-code args.
   jpath:
     description: Values to be passed as --jpath args.
+  input-modules:
+    description: Values to be passed as --input-modules args.
+    default: 'lib:baedeker-library/ops/nginx.libsonnet'
 outputs:
   baedeker:
     description: Launched chain metadata.

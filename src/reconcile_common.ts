@@ -11,6 +11,7 @@ type ReconcilerData = {
    tlaStr?: string[],
    tlaCode?: string[],
    jpath?: string[],
+   inputModules?: string[],
 };
 
 const handleEphemeral = (recon: string[], list: string[], equalsSign: boolean, process: (value: string) => string = v => v) => {
@@ -65,6 +66,9 @@ export default async (recon?: ReconcilerData) => {
    const [reconJpath, jpath] = handleEphemeral(recon.jpath ?? [], core.getMultilineInput('jpath'), false, s => `-J${s}`);
    recon.jpath = reconJpath;
 
+   const [reconInputModules, inputModules] = handleEphemeral(recon.inputModules ?? [], core.getMultilineInput('input-modules'), false, s => `--input-modules=${s}`);
+  recon.inputModules = reconInputModules;
+
    await core.group('Generating docker-compose', () => exec.exec('baedeker', [
       `--secret=file=${secretsDir}`,
       '--spec=docker',
@@ -75,7 +79,7 @@ export default async (recon?: ReconcilerData) => {
       ...tlaStr,
       ...tlaCode,
       ...jpath,
-      '--input-modules=lib:baedeker-library/ops/nginx.libsonnet',
+      ...inputModules,  
    ], {
       env: {
          RUST_LOG: 'info',
