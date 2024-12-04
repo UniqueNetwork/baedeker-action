@@ -23,8 +23,32 @@ const handleEphemeral = (recon: string[], list: string[], equalsSign: boolean, p
    const toUse = raw.map(i => process(i.replace(equalsSign ? /^ephemeral=/ : /^ephemeral:/, '')));
    return [toSave, toUse];
 };
+
+/**
+ * Parses either JSON array, or newline-delimited JSON
+ * Assumes there is no surrounding whitespace, and there is no internal newline
+ * separators in JSON output (So, no pretty-printed jsonNL).
+ * If those assumptions are not correct, then it will fail with error, it should not
+ * produce corrupted output.
+ */
+const parseJsonArray = <T>(json: string) => {
+   if (json.startsWith('[')) {
+      return JSON.parse(json) as T[];
+   }
+
+   return json.replace(/\n$/g, '').split('\n').map((line, lineNum) => {
+      try {
+         return JSON.parse(line) as T;
+      } catch (cause) {
+         throw new Error(`failed to parse output line ${lineNum}`, {cause})
+      }
+   })
+}
+
 export default async (recon?: ReconcilerData) => {
-   if (recon !== undefined) {
+   if (recon === undefined) {
+      recon = {};
+   } else {
       if (!recon.composeProject) throw new Error('bad reconciler data');
       // We don't want to mess with Post action.
       await core.group('Ensuring chain is still running', async () => {
@@ -34,25 +58,28 @@ export default async (recon?: ReconcilerData) => {
             '--format',
             'json',
          ]);
-         const projects = JSON.parse(output.stdout);
+         const projects: Array<{ConfigFiles: string; Status: string}> = parseJsonArray(output.stdout);
          for (const project of projects) {
             if ((project.ConfigFiles === recon!.composeProject || project.ConfigFiles === recon!.configPath) && project.Status.startsWith('running(')) return;
          }
          throw new Error('compose project is not running, refusing to start/reconcile');
       });
    }
-   recon = {};
-   const composeProject = recon?.composeProject || await mkdtemp(join(process.env.RUNNER_TEMP || tmpdir(), 'baedeker-network-'));
+   const composeProject = recon?.composeProject ?? await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'baedeker-network-'));
    recon.composeProject = composeProject;
-   core.saveState(`composeProject`, composeProject);
+   core.saveState('composeProject', composeProject);
    core.setOutput('composeProject', composeProject);
    const composeDiscover = join(composeProject, 'discover.env');
    core.setOutput('composeDiscover', composeDiscover);
    const secretsDir = join(composeProject, 'secrets');
-   await mkdir(secretsDir);
+   try {
+      await mkdir(secretsDir, {recursive: true});
+   } catch (e) {
+      // Pass
+   }
    const configPath = join(composeProject, 'docker-compose.yml');
    recon.configPath = configPath;
-   core.saveState(`configPath`, configPath);
+   core.saveState('configPath', configPath);
 
    const [reconInputs, inputs] = handleEphemeral(recon.inputs ?? [], core.getMultilineInput('inputs'), false);
    recon.inputs = reconInputs;
@@ -74,7 +101,7 @@ export default async (recon?: ReconcilerData) => {
       '--spec=docker',
       `--generator=docker_compose=${composeProject}`,
       `--generator=docker_compose_discover=${composeDiscover}`,
-      `--generator=debug`,
+      // '--generator=debug',
       ...inputs,
       ...tlaStr,
       ...tlaCode,
@@ -105,7 +132,7 @@ export default async (recon?: ReconcilerData) => {
          '--format',
          'json',
       ]);
-      const containers: Array<{ ID: string; Service: string }> = JSON.parse(psOutput.stdout);
+      const containers: Array<{ ID: string; Service: string }> = parseJsonArray(psOutput.stdout);
       const nginxContainer = containers.find(c => c.Service === 'nginx');
       if (!nginxContainer) {
          core.notice('Nginx container not found, no balancer output will be provided');
@@ -116,8 +143,13 @@ export default async (recon?: ReconcilerData) => {
          'inspect',
          nginxContainer.ID,
       ]);
+
       // TODO: Also support ipv6-only docker?
-      const nginxInspect: { NetworkSettings: { Networks: Record<string, { IPAddress: string }> } } = JSON.parse(inspectOutput.stdout)[0];
+      type ContainerInfo = {NetworkSettings: {Networks: Record<string, {IPAddress: string}>}};
+
+      const nginxInspects: ContainerInfo[] = parseJsonArray(inspectOutput.stdout);
+      // We're querying by id, so there is only one container.
+      const nginxInspect = nginxInspects[0];
       const networks = nginxInspect.NetworkSettings.Networks;
       const primaryNetworkName = Object.keys(networks)[0];
       const ip = networks[primaryNetworkName].IPAddress;
