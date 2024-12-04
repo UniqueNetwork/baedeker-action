@@ -66,8 +66,8 @@ export default async (recon?: ReconcilerData) => {
    const [reconJpath, jpath] = handleEphemeral(recon.jpath ?? [], core.getMultilineInput('jpath'), false, s => `-J${s}`);
    recon.jpath = reconJpath;
 
-   const [reconInputModules, input-modules] = handleEphemeral(recon.input-modules ?? [], core.getMultilineInput('input-modules'), true, s => `-J${s}`);
-   recon.jpath = reconJpath;
+   const [reconInputModules, inputModules] = handleEphemeral(recon.inputModules ?? [], core.getMultilineInput('input-modules'), true, s => `--input-modules=${s}`);
+  recon.inputModules = reconInputModules;
 
    await core.group('Generating docker-compose', () => exec.exec('baedeker', [
       `--secret=file=${secretsDir}`,
@@ -79,7 +79,7 @@ export default async (recon?: ReconcilerData) => {
       ...tlaStr,
       ...tlaCode,
       ...jpath,
-      ...input-modules,  
+      ...inputModules,  
    ], {
       env: {
          RUST_LOG: 'info',
